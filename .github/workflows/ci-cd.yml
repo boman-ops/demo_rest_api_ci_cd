@@ -69,8 +69,8 @@ jobs:
         run: |
           powershell -ExecutionPolicy Bypass -Command "
             Write-Host 'Applying Kubernetes manifests...';
-            kubectl apply -f kubernetes/deployment.yaml;
-            kubectl apply -f kubernetes/service.yaml;
+            kubectl --kubeconfig $env:USERPROFILE\.kube\config apply -f ./deployment.yaml;
+            kubectl --kubeconfig $env:USERPROFILE\.kube\config apply -f ./service.yaml;
           "
 
       - name: Post-deploy status
