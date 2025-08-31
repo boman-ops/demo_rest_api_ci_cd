@@ -9,7 +9,7 @@ jobs:
     runs-on: self-hosted
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
 
     env:
       IMAGE_NAME: boma447/my-nestjs-app
@@ -20,47 +20,62 @@ jobs:
     steps:
       - name: Print environment info
         run: |
-          Write-Host "Runner OS: $env:RUNNER_OS"
-          Write-Host "Repository: $env:GITHUB_REPOSITORY"
-          Write-Host "Branch Ref: $env:GITHUB_REF"
-          Write-Host "Commit SHA: $env:GITHUB_SHA"
-          git --version
-          docker --version
-          kubectl version --client --short
+          powershell -ExecutionPolicy Bypass -Command "
+            Write-Host 'Runner OS: ' $env:RUNNER_OS;
+            Write-Host 'Repository: ' $env:GITHUB_REPOSITORY;
+            Write-Host 'Branch Ref: ' $env:GITHUB_REF;
+            Write-Host 'Commit SHA: ' $env:GITHUB_SHA;
+            git --version;
+            docker --version;
+            kubectl version --client --short;
+          "
 
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Docker images before build
-        run: docker images
+        run: |
+          powershell -ExecutionPolicy Bypass -Command "
+            docker images;
+          "
 
       - name: Build image
         run: |
-          $tagSha = $(git rev-parse --short $env:GITHUB_SHA)
-          Write-Host "Building Docker image: $env:IMAGE_NAME:latest and $env:IMAGE_NAME:$tagSha"
-          docker build --progress=plain `
-            -t "$env:IMAGE_NAME:latest" `
-            -t "$env:IMAGE_NAME:$tagSha" .
+          powershell -ExecutionPolicy Bypass -Command "
+            $tagSha = git rev-parse --short $env:GITHUB_SHA;
+            Write-Host 'Building Docker image: ' $env:IMAGE_NAME ':latest and ' $env:IMAGE_NAME ':' $tagSha;
+            docker build --progress=plain `
+            -t $env:IMAGE_NAME`:latest `
+            -t $env:IMAGE_NAME`:$tagSha .;
+          "
 
       - name: Docker login
         run: |
-          Write-Host "Logging in to Docker Hub as $env:DOCKER_USERNAME"
-          echo $env:DOCKER_PASSWORD | docker login --username $env:DOCKER_USERNAME --password-stdin
+          powershell -ExecutionPolicy Bypass -Command "
+            Write-Host 'Logging in to Docker Hub as ' $env:DOCKER_USERNAME;
+            echo $env:DOCKER_PASSWORD | docker login --username $env:DOCKER_USERNAME --password-stdin;
+          "
 
       - name: Push images
         run: |
-          $tagSha = $(git rev-parse --short $env:GITHUB_SHA)
-          Write-Host "Pushing Docker images..."
-          docker push "$env:IMAGE_NAME:latest"
-          docker push "$env:IMAGE_NAME:$tagSha"
+          powershell -ExecutionPolicy Bypass -Command "
+            $tagSha = git rev-parse --short $env:GITHUB_SHA;
+            Write-Host 'Pushing Docker images...';
+            docker push $env:IMAGE_NAME`:latest;
+            docker push $env:IMAGE_NAME`:$tagSha;
+          "
 
       - name: Deploy to Kubernetes
         run: |
-          Write-Host "Applying Kubernetes manifests..."
-          kubectl apply -f kubernetes/deployment.yaml
-          kubectl apply -f kubernetes/service.yaml
+          powershell -ExecutionPolicy Bypass -Command "
+            Write-Host 'Applying Kubernetes manifests...';
+            kubectl apply -f kubernetes/deployment.yaml;
+            kubectl apply -f kubernetes/service.yaml;
+          "
 
       - name: Post-deploy status
         if: always()
         run: |
-          kubectl get all -n $env:KUBE_NAMESPACE
+          powershell -ExecutionPolicy Bypass -Command "
+            kubectl get all -n $env:KUBE_NAMESPACE;
+          "
