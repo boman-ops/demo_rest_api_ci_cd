@@ -1,0 +1,11 @@
+﻿{
+  "agentId": 2,
+  "agentName": "IT-BOMAN",
+  "poolId": 1,
+  "poolName": "Default",
+  "serverUrl": "https://pipelinesghubeus5.actions.githubusercontent.com/CVkRKIcT3ZJyWZjTva1qA5Y4asspLvj3VYsaLQpOqphQV4Ic1i/",
+  "gitHubUrl": "https://github.com/boman-ops/demo_rest_api_ci_cd",
+  "workFolder": "_work",
+  "useV2Flow": true,
+  "serverUrlV2": "https://broker.actions.githubusercontent.com/"
+}

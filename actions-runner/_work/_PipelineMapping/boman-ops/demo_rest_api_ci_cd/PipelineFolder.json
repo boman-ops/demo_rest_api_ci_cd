@@ -1,0 +1,12 @@
+﻿{
+  "repositoryName": "boman-ops/demo_rest_api_ci_cd",
+  "pipelineDirectory": "demo_rest_api_ci_cd",
+  "workspaceDirectory": "demo_rest_api_ci_cd\\demo_rest_api_ci_cd",
+  "repositories": {
+    "boman-ops/demo_rest_api_ci_cd": {
+      "repositoryPath": "demo_rest_api_ci_cd\\demo_rest_api_ci_cd",
+      "lastRunOn": "08/31/2025 15:28:59 +07:00"
+    }
+  },
+  "lastRunOn": "08/31/2025 15:28:59 +07:00"
+}

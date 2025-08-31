@@ -1,0 +1,32 @@
+name: CI/CD for NestJS App
+
+on:
+  push:
+    branches:
+      - main  # Chạy workflow khi push lên nhánh 'main'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Chạy trên môi trường Ubuntu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # Checkout code từ repo
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1  # Cài đặt Docker Buildx
+
+      - name: Build Docker image
+        run: |
+          docker build -t my-nestjs-app .
+          docker tag my-nestjs-app:latest my-dockerhub-username/my-nestjs-app:latest
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push my-dockerhub-username/my-nestjs-app:latest
+
+      - name: Deploy to Kubernetes (Docker Desktop)
+        run: |
+          kubectl apply -f kubernetes/deployment.yaml
+          kubectl apply -f kubernetes/service.yaml

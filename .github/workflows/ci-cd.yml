@@ -1,32 +1,66 @@
-name: CI/CD for NestJS App
+name: CI/CD for NestJS App (Windows self-hosted)
 
 on:
   push:
-    branches:
-      - main  # Chạy workflow khi push lên nhánh 'main'
+    branches: [ main ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # Chạy trên môi trường Ubuntu
+    runs-on: self-hosted
+    defaults:
+      run:
+        shell: powershell
+
+    env:
+      IMAGE_NAME: boma447/my-nestjs-app
+      KUBE_NAMESPACE: default
+      DOCKER_USERNAME: boma447
+      DOCKER_PASSWORD: dckr_pat_CVx1bEVZAzjxY_DFnf4NDB2EZlM
 
     steps:
+      - name: Print environment info
+        run: |
+          Write-Host "Runner OS: $env:RUNNER_OS"
+          Write-Host "Repository: $env:GITHUB_REPOSITORY"
+          Write-Host "Branch Ref: $env:GITHUB_REF"
+          Write-Host "Commit SHA: $env:GITHUB_SHA"
+          git --version
+          docker --version
+          kubectl version --client --short
+
       - name: Checkout code
-        uses: actions/checkout@v2  # Checkout code từ repo
+        uses: actions/checkout@v4
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v1  # Cài đặt Docker Buildx
+      - name: Docker images before build
+        run: docker images
 
-      - name: Build Docker image
+      - name: Build image
         run: |
-          docker build -t my-nestjs-app .
-          docker tag my-nestjs-app:latest my-dockerhub-username/my-nestjs-app:latest
+          $tagSha = $(git rev-parse --short $env:GITHUB_SHA)
+          Write-Host "Building Docker image: $env:IMAGE_NAME:latest and $env:IMAGE_NAME:$tagSha"
+          docker build --progress=plain `
+            -t "$env:IMAGE_NAME:latest" `
+            -t "$env:IMAGE_NAME:$tagSha" .
 
-      - name: Push Docker image to Docker Hub
+      - name: Docker login
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker push my-dockerhub-username/my-nestjs-app:latest
+          Write-Host "Logging in to Docker Hub as $env:DOCKER_USERNAME"
+          echo $env:DOCKER_PASSWORD | docker login --username $env:DOCKER_USERNAME --password-stdin
 
-      - name: Deploy to Kubernetes (Docker Desktop)
+      - name: Push images
         run: |
+          $tagSha = $(git rev-parse --short $env:GITHUB_SHA)
+          Write-Host "Pushing Docker images..."
+          docker push "$env:IMAGE_NAME:latest"
+          docker push "$env:IMAGE_NAME:$tagSha"
+
+      - name: Deploy to Kubernetes
+        run: |
+          Write-Host "Applying Kubernetes manifests..."
           kubectl apply -f kubernetes/deployment.yaml
           kubectl apply -f kubernetes/service.yaml
+
+      - name: Post-deploy status
+        if: always()
+        run: |
+          kubectl get all -n $env:KUBE_NAMESPACE
