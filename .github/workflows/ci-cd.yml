@@ -27,7 +27,7 @@ jobs:
             Write-Host 'Commit SHA: ' $env:GITHUB_SHA;
             git --version;
             docker --version;
-            kubectl version --client --short;
+            kubectl version --client=true;
           "
 
       - name: Checkout code
